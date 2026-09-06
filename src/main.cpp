@@ -1,5 +1,5 @@
 #include <Arduino.h>
-
+#include <Bounce2.h>
 
 extern "C" {
 #include "adf4351.h"
@@ -26,22 +26,26 @@ int ledState = LOW;
 unsigned long previousMillis = 0;
 const unsigned long interval = 1000;
 
-#define BUTTON_PIN 9
+constexpr uint8_t BUTTON_PIN  = 9;
+
 uint8_t selectedFrequencyIndex = 0;
 constexpr uint8_t maxFrequencyIndex = 5;
-bool lastButtonState = HIGH;
-bool buttonState = HIGH;
 
-uint16_t lastDebounceTime = 0;
-constexpr uint16_t DEBOUNCE_MS = 50;
+Bounce2::Button button;
+constexpr uint16_t DEBOUNCE_MS = 20;
+
+Preferences preferences;
 
 void setup()
 {
     Serial.begin(115200);
+
     pinMode(LED_PIN, OUTPUT);
     digitalWrite(LED_PIN, ledState);
     
-    pinMode(BUTTON_PIN, INPUT_PULLUP);
+    button.attach(BUTTON_PIN, INPUT_PULLUP);
+    button.interval(DEBOUNCE_MS);
+    button.setPressedState(LOW);
 
     delay(4 * 1000);
 
@@ -119,30 +123,14 @@ void setup()
 }
 
 void handleButton() {
-  int currentButtonState = digitalRead(BUTTON_PIN);
-  unsigned long currentMillis = millis();
-
-  if (currentButtonState != lastButtonState) {
-    lastDebounceTime = currentMillis;
-    lastButtonState = currentButtonState;
-  }
-  if ((currentMillis - lastDebounceTime) >= DEBOUNCE_MS) {
-    if (currentButtonState != buttonState) {
-      buttonState = currentButtonState;
-      if (buttonState == LOW) {
-        ++selectedFrequencyIndex;
-        if (selectedFrequencyIndex >= maxFrequencyIndex) {
-          selectedFrequencyIndex = 0;
-        }
-        Serial.printf("Active frequency Index: %u", selectedFrequencyIndex); Serial.println();
-      }
+  button.update();
+  if (button.pressed()) {
+    ++selectedFrequencyIndex;
+    if (selectedFrequencyIndex >= maxFrequencyIndex) {
+      selectedFrequencyIndex = 0;
     }
+    Serial.printf("Active frequency Index: %u", selectedFrequencyIndex); Serial.println();
   }
-
-  /*
-  if (buttonState == LOW) {
-    Serial.println("Button pressed");
-  }*/
 }
 
 void loop()
