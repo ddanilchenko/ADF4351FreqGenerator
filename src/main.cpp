@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <Bounce2.h>
+#include <Preferences.h>
 
 extern "C" {
 #include "adf4351.h"
@@ -8,14 +9,13 @@ extern "C" {
 
 static constexpr uint32_t TARGET_FREQ =  2400000000UL;
 
+static constexpr uint32_t INTERMEDIATE_FREQ[] = {
+  28000000UL, //28 MHz
+  50000000UL, //50 MHz
+ 144000000UL, //144 MHz
+ 432000000UL //432 MHz
+};
 
-static constexpr uint32_t INTERMEDIATE_FREQ = 28000000UL; //MHz
-//static constexpr uint32_t INTERMEDIATE_FREQ = 50000000UL; //MHz
-//static constexpr uint32_t INTERMEDIATE_FREQ = 144000000UL; //MHz
-//static constexpr uint32_t INTERMEDIATE_FREQ = 432000000UL; //MHz
-
-
-static constexpr uint32_t LO_FREQ  = TARGET_FREQ - INTERMEDIATE_FREQ;
 
 static ADF4351_cfg vfo = {};
 
@@ -29,28 +29,15 @@ const unsigned long interval = 1000;
 constexpr uint8_t BUTTON_PIN  = 9;
 
 uint8_t selectedFrequencyIndex = 0;
-constexpr uint8_t maxFrequencyIndex = 5;
+constexpr uint8_t maxFrequencyIndex = sizeof(INTERMEDIATE_FREQ) / sizeof(INTERMEDIATE_FREQ[0]);
 
 Bounce2::Button button;
 constexpr uint16_t DEBOUNCE_MS = 20;
 
 Preferences preferences;
+constexpr char FREQUENCY_INDEX_KEY[] = "frqNtx";
 
-void setup()
-{
-    Serial.begin(115200);
-
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, ledState);
-    
-    button.attach(BUTTON_PIN, INPUT_PULLUP);
-    button.interval(DEBOUNCE_MS);
-    button.setPressedState(LOW);
-
-    delay(4 * 1000);
-
-    Serial.println("ADF4351 QO-100 Upconverter");
-
+void initADF4351() {
     /*
      * PLL configuration
      */
@@ -93,25 +80,31 @@ void setup()
     vfo.pins.gpio_ld   = GPIO_NUM_4;   // dummy input
 
     Serial.println("Initializing ADF4351...");
-
     ADF4351_initialise(&vfo);
+}
 
-    if (ADF4351_set_ref_freq(&vfo, REF_FREQ) != 0)
+bool setRefFreqADF4351(const uint32_t refFreq) {
+    if (ADF4351_set_ref_freq(&vfo, refFreq) != 0)
     {
-        Serial.println("ERROR: invalid reference frequency");
-        return;
+        Serial.printf("ERROR: Set reference frequency to %lu MHz", refFreq);Serial.println();
+        return false;
+    }
+    return true;
+}
+
+bool setFreqADF4351(const uint32_t freq) {
+    if (ADF4351_set_freq(&vfo, freq) != 0)
+    {
+        Serial.printf("ERROR: Set frequency to %lu MHz", freq);Serial.println();
+        return false;
     }
 
-    ADF4351_enable(&vfo);
+  return true;
+}
 
-    if (ADF4351_set_freq(&vfo, LO_FREQ) != 0)
-    {
-        Serial.println("ERROR: cannot set 2256 MHz");
-        return;
-    }
-
-    uint32_t loFreqMHz = LO_FREQ / 1000000;
-    uint32_t intermediateFreqMHz = INTERMEDIATE_FREQ / 1000000;
+void printStatus(const uint32_t freq) {
+    uint32_t loFreqMHz = freq / 1000000;
+    uint32_t intermediateFreqMHz = INTERMEDIATE_FREQ[selectedFrequencyIndex] / 1000000;
     uint32_t targetFreqMHz = TARGET_FREQ / 1000000;
 
     Serial.println("ADF4351 configured");
@@ -122,6 +115,45 @@ void setup()
     Serial.printf("%lu MHz + %lu MHz = %Lu MHz", intermediateFreqMHz, loFreqMHz, targetFreqMHz);Serial.println();
 }
 
+void updateLOFreqADF4351() {
+    uint32_t LO_FREQ = TARGET_FREQ - INTERMEDIATE_FREQ[selectedFrequencyIndex];
+    if (!setFreqADF4351(LO_FREQ)) {
+      return;
+    }
+    printStatus(LO_FREQ);
+}
+
+void setup()
+{
+    Serial.begin(115200);
+    preferences.begin("settings", false);
+
+    selectedFrequencyIndex = preferences.getInt(FREQUENCY_INDEX_KEY);
+    if (selectedFrequencyIndex >= maxFrequencyIndex) {
+      selectedFrequencyIndex = 0;
+    }
+
+    pinMode(LED_PIN, OUTPUT);
+    digitalWrite(LED_PIN, ledState);
+    
+    button.attach(BUTTON_PIN, INPUT_PULLUP);
+    button.interval(DEBOUNCE_MS);
+    button.setPressedState(LOW);
+
+    delay(4 * 1000);
+
+    Serial.println("ADF4351 QO-100 Upconverter");
+
+    initADF4351();
+    if (!setRefFreqADF4351(REF_FREQ)) {
+      return;
+    }
+   
+    ADF4351_enable(&vfo);
+    
+    updateLOFreqADF4351();
+}
+
 void handleButton() {
   button.update();
   if (button.pressed()) {
@@ -129,7 +161,8 @@ void handleButton() {
     if (selectedFrequencyIndex >= maxFrequencyIndex) {
       selectedFrequencyIndex = 0;
     }
-    Serial.printf("Active frequency Index: %u", selectedFrequencyIndex); Serial.println();
+    preferences.putInt(FREQUENCY_INDEX_KEY, selectedFrequencyIndex);
+    updateLOFreqADF4351();
   }
 }
 
