@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Bounce2.h>
 #include <Preferences.h>
+#include <ezLED.h>
 
 extern "C" {
 #include "adf4351.h"
@@ -22,9 +23,7 @@ static ADF4351_cfg vfo = {};
 static constexpr uint32_t REF_FREQ = 25000000UL;     // 25 MHz
 
 #define LED_PIN 8
-int ledState = LOW;             
-unsigned long previousMillis = 0;
-const unsigned long interval = 1000;
+ezLED led(LED_PIN, CTRL_ANODE);        
 
 constexpr uint8_t BUTTON_PIN  = 9;
 
@@ -113,14 +112,16 @@ void printStatus(const uint32_t freq) {
     Serial.printf("LO = %lu MHz", loFreqMHz);Serial.println();
 
     Serial.printf("%lu MHz + %lu MHz = %Lu MHz", intermediateFreqMHz, loFreqMHz, targetFreqMHz);Serial.println();
+
+    led.blinkNumberOfTimes(150, 150, selectedFrequencyIndex + 1);
 }
 
 void updateLOFreqADF4351() {
-    uint32_t LO_FREQ = TARGET_FREQ - INTERMEDIATE_FREQ[selectedFrequencyIndex];
-    if (!setFreqADF4351(LO_FREQ)) {
+    uint32_t loFreq = TARGET_FREQ - INTERMEDIATE_FREQ[selectedFrequencyIndex];
+    if (!setFreqADF4351(loFreq)) {
       return;
     }
-    printStatus(LO_FREQ);
+    printStatus(loFreq);
 }
 
 void setup()
@@ -132,15 +133,12 @@ void setup()
     if (selectedFrequencyIndex >= maxFrequencyIndex) {
       selectedFrequencyIndex = 0;
     }
-
-    pinMode(LED_PIN, OUTPUT);
-    digitalWrite(LED_PIN, ledState);
     
     button.attach(BUTTON_PIN, INPUT_PULLUP);
     button.interval(DEBOUNCE_MS);
     button.setPressedState(LOW);
 
-    delay(4 * 1000);
+    delay(2 * 1000);
 
     Serial.println("ADF4351 QO-100 Upconverter");
 
@@ -168,22 +166,6 @@ void handleButton() {
 
 void loop()
 {
-  unsigned long currentMillis = millis();
-
+  led.loop();
   handleButton();
-
-  if (currentMillis - previousMillis >= interval) {
-    // Save the last time you blinked the LED
-    previousMillis = currentMillis;
-
-    // Toggle the LED state
-    if (ledState == LOW) {
-      ledState = HIGH;
-    } else {
-      ledState = LOW;
-    }
-
-    // Apply the state to the physical pin
-    digitalWrite(LED_PIN, ledState);
-  }
 }
