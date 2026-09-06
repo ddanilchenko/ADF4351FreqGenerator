@@ -51,7 +51,7 @@ void initADF4351() {
     vfo.ChanStep     = 1000000UL;
 
     // Maximum ADF4351 output level: +5 dBm
-    vfo.pwrlevel     = 3;
+    vfo.pwrlevel     = 3; //3 - MAX OUTPUT Level
 
     /*
      * ESP32-C3 -> ADF4351
@@ -60,23 +60,20 @@ void initADF4351() {
      * GPIO5 = DATA
      * GPIO6 = CLK
      * GPIO7 = LE
+     * GPIO10 = CE
      *
-     * GPIO8/9/10 are dummy pins required by this library.
+     * GPIO1/4/0 are dummy pins required by this library.
      */
     vfo.pins.gpio_mosi = GPIO_NUM_5;   // DATA
     vfo.pins.gpio_sclk = GPIO_NUM_6;   // CLK
     vfo.pins.gpio_le   = GPIO_NUM_7;   // LE
+    vfo.pins.gpio_ce   = GPIO_NUM_10;   // CE
 
-    //todo use GPIO_NUM_NC instead of dummy pins
-
-    vfo.pins.gpio_ce   = GPIO_NUM_0;   // dummy
-
-    vfo.pins.gpio_cs   = GPIO_NUM_1;   // dummy
-    vfo.pins.gpio_miso = GPIO_NUM_10;  // dummy
-
-    // LD is not connected on our board.
+    // CS/MISO/LD are not connected on our board.
     // Library nevertheless requires a valid GPIO number.
-    vfo.pins.gpio_ld   = GPIO_NUM_4;   // dummy input
+    vfo.pins.gpio_cs   = GPIO_NUM_1;   // dummy
+    vfo.pins.gpio_miso = GPIO_NUM_4;  // dummy
+    vfo.pins.gpio_ld   = GPIO_NUM_0;   // dummy input
 
     Serial.println("Initializing ADF4351...");
     ADF4351_initialise(&vfo);
