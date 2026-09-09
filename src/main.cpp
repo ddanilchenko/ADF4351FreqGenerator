@@ -1,10 +1,9 @@
 #include <Arduino.h>
 
-#include <ezLED.h>
-
 #include "ButtonController.h"
 #include "Adf4351Controller.h"
 #include "FrequencySelector.h"
+#include "LedController.h"
 
 static constexpr uint32_t TARGET_FREQ =  2400000000UL;
 
@@ -21,7 +20,7 @@ constexpr uint8_t FREQUENCY_COUNT =
 static constexpr uint32_t REF_FREQ = 25000000UL;     // 25 MHz
 
 #define LED_PIN 8
-ezLED led(LED_PIN, CTRL_ANODE);        
+LedController led(LED_PIN);   
 
 constexpr uint8_t BUTTON_PIN  = 9;
 
@@ -121,7 +120,7 @@ void handleButton() {
 
 void loop()
 {
-  led.loop();
+  led.update();
   button.update();
 
   handleButton();
