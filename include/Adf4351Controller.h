@@ -13,12 +13,9 @@ public:
         gpio_num_t clock;
         gpio_num_t le;
         gpio_num_t ce;
-
-        // Required by the currently used ADF4351 library even when
-        // these signals are not physically connected.
-        gpio_num_t dummyCs;
-        gpio_num_t dummyMiso;
-        gpio_num_t dummyLd;
+        gpio_num_t cs;
+        gpio_num_t miso;
+        gpio_num_t ld;
     };
 
     explicit Adf4351Controller(const Pins& _pins);

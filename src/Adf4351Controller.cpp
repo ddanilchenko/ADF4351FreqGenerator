@@ -54,7 +54,7 @@ void Adf4351Controller::configurePins() {
     vfo.pins.gpio_le   = pins.le;
     vfo.pins.gpio_ce   = pins.ce;
 
-    vfo.pins.gpio_cs   = pins.dummyCs;
-    vfo.pins.gpio_miso = pins.dummyMiso;
-    vfo.pins.gpio_ld   = pins.dummyLd;
+    vfo.pins.gpio_cs   = pins.cs;
+    vfo.pins.gpio_miso = pins.miso;
+    vfo.pins.gpio_ld   = pins.ld;
 }

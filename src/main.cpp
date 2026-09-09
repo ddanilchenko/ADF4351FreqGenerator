@@ -46,9 +46,9 @@ Adf4351Controller adf({
     .ce = GPIO_NUM_10,
 
     // Not physically connected; required by the ADF4351 library.
-    .dummyCs = GPIO_NUM_1,
-    .dummyMiso = GPIO_NUM_4,
-    .dummyLd = GPIO_NUM_0
+    .cs = GPIO_NUM_1,
+    .miso = GPIO_NUM_4,
+    .ld = GPIO_NUM_0
 });
 
 uint32_t calculateLoFrequency(uint32_t intermediateFrequency) {
