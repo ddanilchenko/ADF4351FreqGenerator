@@ -71,7 +71,7 @@ void printStatus(uint32_t intermediateFrequency, uint32_t loFrequency) {
                   static_cast<unsigned long>(loFrequency / 1000000UL),
                   static_cast<unsigned long>(TARGET_FREQ / 1000000UL));
 
-    led.blink(150, 150, frequencySelector.currentIndex() + 1);
+    led.blinkNumberOfTimes(150, 150, frequencySelector.currentIndex() + 1);
 }
 
 bool applyCurrentFrequency() {
@@ -96,7 +96,7 @@ void setup()
     button.init();
     frequencySelector.init();
 
-    delay(2 * 1000);
+    delay(4 * 1000);
 
     Serial.println("ADF4351 QO-100 Upconverter");
 
