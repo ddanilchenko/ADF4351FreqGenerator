@@ -49,6 +49,8 @@ Adf4351Controller adf({
     .miso = GPIO_NUM_4,
     .ld = GPIO_NUM_0
 });
+void onPressedCallback();
+
 
 uint32_t calculateLoFrequency(uint32_t intermediateFrequency) {
     return TARGET_FREQ - intermediateFrequency;
@@ -93,6 +95,8 @@ void setup()
     Serial.begin(115200);
     
     button.init();
+    button.onPressed(&onPressedCallback);
+
     frequencySelector.init();
 
     delay(4 * 1000);
@@ -109,19 +113,14 @@ void setup()
     applyCurrentFrequency();
 }
 
-void handleButton() {
-  if (!button.isPressed()) {
-    return;
-  }
-
+void onPressedCallback() {
   frequencySelector.next();
   applyCurrentFrequency();
+
 }
 
 void loop()
 {
   led.update();
   button.update();
-
-  handleButton();
 }

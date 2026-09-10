@@ -12,12 +12,19 @@ void ButtonController::init() {
 
 void ButtonController::update() {
     button.update();
+    if (button.pressed() && onPressedCallback) {
+        onPressedCallback();
+    }
+
+    if (button.released() && onReleasedCallback) {
+        onReleasedCallback();
+    }
 }
 
-bool ButtonController::isPressed() const {
-    return button.pressed();
+void ButtonController::onPressed(ButtonController::Callback callback) {
+    onPressedCallback = callback;
 }
 
-bool ButtonController::isReleased() const {
-    return button.released();
+void ButtonController::onReleased(ButtonController::Callback callback){
+    onReleasedCallback = callback;
 }
