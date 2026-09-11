@@ -262,11 +262,11 @@ Serial speed:
 
 Dependencies are managed automatically by PlatformIO:
 
-- ADF4351-ESP32
-- Bounce2
-- ArduinoGetStarted LED
+- [ADF4351-ESP32](https://github.com/YutingXu/ADF4351-ESP32.git)
+- [Bounce2](https://github.com/thomasfredericks/Bounce2)
+- [ArduinoGetStarted LED](https://github.com/ArduinoGetStarted/led.git)
 - ESP32 Preferences
-
+  
 See `platformio.ini` for the exact configuration.
 
 ## Serial Output
