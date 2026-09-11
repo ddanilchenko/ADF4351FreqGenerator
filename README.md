@@ -309,5 +309,5 @@ QO-100 2.4 GHz upconverter, but the ADF4351 abstraction makes it suitable
 for other frequency synthesizer and local oscillator applications as well.
 
 ## License
-
-No license has been specified yet.
+The project is licensed under the MIT License.
+See the [LICENSE](LICENSE) file for details.
